@@ -1,0 +1,66 @@
+# R Script: Biomarker Prediction using Logistic Regression
+
+# Load necessary libraries
+library(tidyverse)
+library(caret)
+library(ROCR)
+
+# Load the dataset
+# Assume the dataset is saved as 'dataR2.csv' in your working directory
+data <- read.csv("dataR2.csv")
+
+# Check the structure of the data to confirm it loaded correctly
+str(data)
+
+# Preprocess data: Handling missing values and scaling numeric features
+data_clean <- data %>%
+  mutate(Classification = as.factor(Classification)) %>%
+  drop_na()  # Remove rows with missing values
+
+# Split the data into training and testing sets (70% training, 30% testing)
+set.seed(123)  # Set seed for reproducibility
+trainIndex <- createDataPartition(data_clean$Classification, p = 0.7, list = FALSE)
+trainData <- data_clean[trainIndex, ]
+testData <- data_clean[-trainIndex, ]
+
+# Train a logistic regression model
+model <- glm(Classification ~ Age + BMI + Glucose + Insulin + HOMA +
+             Leptin + Adiponectin + Resistin + MCP.1,
+             data = trainData, family = "binomial")
+
+# Summary of the model
+summary(model)
+
+# Make predictions on the test data
+predictions <- predict(model, testData, type = "response")
+
+# Convert predictions to binary classification (0 or 1)
+predictions_class <- ifelse(predictions > 0.5, 1, 0)
+
+# Evaluate the model performance
+confusion <- confusionMatrix(as.factor(predictions_class), testData$Classification)
+print(confusion)
+
+# Calculate ROC curve and AUC
+pred <- prediction(predictions, testData$Classification)
+perf <- performance(pred, "tpr", "fpr")
+roc_auc <- performance(pred, "auc")
+cat("AUC: ", roc_auc@y.values[[1]], "\n")
+
+# Plot ROC curve
+plot(perf, col = "blue", main = "ROC Curve", xlab = "False Positive Rate", 
+     ylab = "True Positive Rate")
+abline(a = 0, b = 1, col = "red", lty = 2)  # Diagonal line representing random classifier
+
+# Plot predicted vs actual classification
+ggplot(testData, aes(x = predictions, y = as.factor(Classification))) +
+  geom_point() +
+  labs(title = "Predicted vs Actual Classification", x = "Predicted Probability", y = "Actual Classification") +
+  theme_minimal()
+
+# Visualize the coefficients of the logistic regression model
+coefficients <- summary(model)$coefficients
+coefficients_df <- data.frame(Variable = rownames(coefficients), 
+                              Estimate = coefficients[, 1], 
+                              p_value = coefficients[, 4])
+print(coefficients_df)
