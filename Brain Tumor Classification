@@ -1,0 +1,8 @@
+pip install kaggle
+kaggle datasets download -d sartajbhuvaji/brain-tumor-classification-mri
+import os
+import cv2
+import matplotlib.pyplot as plt
+dataset_path = r"C:\Users\pawan\brain-tumor-classification-mri"
+classes = os.listdir(dataset_path)
+print("Classes:", classes)
