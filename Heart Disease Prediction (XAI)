@@ -70,6 +70,66 @@ print(shap_values.shape)
 shap.force_plot(explainer.expected_value, shap_values[0, :], X_test.iloc[0, :])
 # Decision plot for multiple predictions
 shap.decision_plot(explainer.expected_value, shap_values, X_test)
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+# Load your dataset
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data"
+column_names = [
+    "age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", 
+    "exang", "oldpeak", "slope", "ca", "thal", "target"
+]
+df = pd.read_csv(url, names=column_names, na_values="?")
+
+# Handle missing values (if any)
+df = df.dropna()
+
+# Convert target to binary (1 = heart disease, 0 = no heart disease)
+df["target"] = df["target"].apply(lambda x: 1 if x > 0 else 0)
+
+# Split the data into features (X) and target (y)
+X = df.drop("target", axis=1)
+y = df["target"]
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the Logistic Regression model
+model = LogisticRegression(max_iter=1000, random_state=42)
+model.fit(X_train, y_train)
+import joblib
+
+# Save the trained model
+joblib.dump(model, "heart_disease_model.pkl")
+import shap
+
+# Initialize the SHAP explainer
+explainer = shap.LinearExplainer(model, X_train)
+
+# Calculate SHAP values for the test set
+shap_values = explainer.shap_values(X_test)
+
+# Save the SHAP explainer
+joblib.dump(explainer, "shap_explainer.pkl")
+
+# Save the SHAP values
+joblib.dump(shap_values, "shap_values.pkl")
+# Load the trained model
+loaded_model = joblib.load("heart_disease_model.pkl")
+
+# Load the SHAP explainer
+loaded_explainer = joblib.load("shap_explainer.pkl")
+
+# Load the SHAP values
+loaded_shap_values = joblib.load("shap_values.pkl")
+
+# Verify the model by making predictions
+y_pred = loaded_model.predict(X_test)
+print("Predictions:", y_pred)
+
+# Verify the SHAP explainer by generating a decision plot
+shap.decision_plot(loaded_explainer.expected_value, loaded_shap_values, X_test)
 
 
 
