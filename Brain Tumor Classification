@@ -293,6 +293,52 @@ history = model.fit(datagen.flow(X_train, y_train_encoded, batch_size=32),
                     validation_data=(X_test, y_test_encoded))
 
 print("Model training with adjusted settings completed.")
+# Evaluate the model
+test_loss, test_accuracy = model.evaluate(X_test, y_test_encoded)
+print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
+# Save the model
+model.save("brain_tumor_cnn_adjusted_model.h5")
+print("Adjusted model saved as brain_tumor_cnn_adjusted_model.h5")
+from tensorflow.keras.models import load_model
+
+# Load the trained model
+model = load_model("brain_tumor_cnn_adjusted_model.h5")
+print("Model loaded.")
+# Evaluate the model
+test_loss, test_accuracy = model.evaluate(X_test, y_test_encoded)
+print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
+# Generate predictions
+y_pred = model.predict(X_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+
+# Decode the predictions
+y_pred_labels = label_encoder.inverse_transform(y_pred_classes)
+y_true_labels = label_encoder.inverse_transform(y_test_encoded)
+
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Create the confusion matrix
+cm = confusion_matrix(y_true_labels, y_pred_labels)
+
+# Plot the confusion matrix
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=label_encoder.classes_, 
+            yticklabels=label_encoder.classes_)
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted Labels")
+plt.ylabel("True Labels")
+plt.show()
+from sklearn.metrics import classification_report
+
+# Print the classification report
+print("Classification Report:")
+print(classification_report(y_true_labels, y_pred_labels, target_names=label_encoder.classes_))
+
+   
+
 
 
 
