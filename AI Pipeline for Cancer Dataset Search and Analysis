@@ -1,0 +1,485 @@
+from Bio import Entrez
+
+# Set your email for API access (required by NCBI)
+Entrez.email = "your_email@example.com"
+
+# Define the search term (e.g., breast cancer and relapse)
+search_term = "breast cancer AND relapse"
+
+# Search for datasets in GEO
+handle = Entrez.esearch(db="gds", term=search_term, retmax=10)  # retmax limits the number of results
+record = Entrez.read(handle)
+handle.close()
+
+# Retrieve dataset IDs
+dataset_ids = record["IdList"]
+print("Retrieved Dataset IDs:", dataset_ids)
+from Bio import Entrez
+
+# Set your email for API access (required by NCBI)
+Entrez.email = "your_email@example.com"
+
+# List of dataset IDs retrieved earlier
+dataset_ids = ['200261230', '200290554', '200290450', '200290039', '200290038', '200289340', '200253308', '200264197', '200285299', '200283522']
+
+# Fetch dataset details
+datasets = []
+for dataset_id in dataset_ids:
+    handle = Entrez.esummary(db="gds", id=dataset_id)
+    summary = Entrez.read(handle)
+    handle.close()
+    datasets.append(summary[0])  # Store dataset details
+
+# Display dataset details
+for dataset in datasets:
+    print("Dataset ID:", dataset.get("Id", "N/A"))
+    print("Title:", dataset.get("title", "N/A"))
+    print("Organism:", dataset.get("Organism", "N/A"))
+    print("Platform:", dataset.get("Platform", "N/A"))
+    print("Samples:", dataset.get("Samples", "N/A"))
+    print("FTP Download Link:", dataset.get("FTPLink", "N/A"))
+    print("-" * 50)
+import os
+import urllib.request
+
+# Create a directory to store the datasets
+os.makedirs("datasets", exist_ok=True)
+
+# Download datasets
+for dataset in datasets:
+    dataset_id = dataset.get("Id", "N/A")
+    ftp_link = dataset.get("FTPLink", None)
+    
+    if ftp_link:
+        file_name = f"datasets/{dataset_id}.tar.gz"
+        print(f"Downloading {dataset_id}...")
+        try:
+            urllib.request.urlretrieve(ftp_link, file_name)
+            print(f"Downloaded {file_name}")
+        except Exception as e:
+            print(f"Failed to download {dataset_id}: {e}")
+    else:
+        print(f"Skipping {dataset_id} (no FTP link available)")
+import os
+import urllib.request
+
+# Create a directory to store the datasets
+os.makedirs("datasets", exist_ok=True)
+
+# Download datasets
+for dataset in datasets:
+    dataset_id = dataset.get("Id", "N/A")
+    ftp_link = dataset.get("FTPLink", None)
+    
+    if ftp_link:
+        file_name = f"datasets/{dataset_id}"
+        print(f"Downloading {dataset_id}...")
+        try:
+            urllib.request.urlretrieve(ftp_link, file_name)
+            print(f"Downloaded {file_name}")
+        except Exception as e:
+            print(f"Failed to download {dataset_id}: {e}")
+    else:
+        print(f"Skipping {dataset_id} (no FTP link available)")
+import zipfile
+import tarfile
+
+# Extract datasets
+for dataset in datasets:
+    dataset_id = dataset.get("Id", "N/A")
+    file_name = f"datasets/{dataset_id}"
+    
+    if os.path.exists(file_name):
+        print(f"Processing {file_name}...")
+        try:
+            # Check if the file is a ZIP archive
+            if zipfile.is_zipfile(file_name):
+                with zipfile.ZipFile(file_name, "r") as zip_ref:
+                    zip_ref.extractall(path=f"datasets/{dataset_id}")
+                print(f"Extracted {file_name} (ZIP)")
+            
+            # Check if the file is a TAR archive
+            elif tarfile.is_tarfile(file_name):
+                with tarfile.open(file_name, "r:*") as tar:
+                    tar.extractall(path=f"datasets/{dataset_id}")
+                print(f"Extracted {file_name} (TAR)")
+            
+            # If the file is not an archive, assume it's a flat file (e.g., CSV, TXT)
+            else:
+                print(f"{file_name} is not an archive (assuming flat file)")
+        
+        except Exception as e:
+            print(f"Failed to process {file_name}: {e}")
+    else:
+        print(f"Skipping {dataset_id} (file not found)")
+import pandas as pd
+
+# Create a DataFrame with dataset metadata
+metadata = []
+for dataset in datasets:
+    metadata.append({
+        "ID": dataset.get("Id", "N/A"),
+        "Title": dataset.get("title", "N/A"),
+        "Organism": dataset.get("Organism", "N/A"),
+        "Platform": dataset.get("Platform", "N/A"),
+        "Samples": dataset.get("Samples", "N/A"),
+        "FTPLink": dataset.get("FTPLink", "N/A")
+    })
+
+# Save metadata to a CSV file
+metadata_df = pd.DataFrame(metadata)
+metadata_df.to_csv("datasets/metadata.csv", index=False)
+print("Dataset metadata saved to datasets/metadata.csv")
+import os
+import pandas as pd
+
+# List all files in the datasets folder
+dataset_files = os.listdir("datasets")
+
+# Load datasets into a dictionary of DataFrames
+dataframes = {}
+for file in dataset_files:
+    if file.endswith(".csv") or file.endswith(".txt"):
+        file_path = os.path.join("datasets", file)
+        try:
+            df = pd.read_csv(file_path)
+            dataframes[file] = df
+            print(f"Loaded {file} with shape {df.shape}")
+        except Exception as e:
+            print(f"Failed to load {file}: {e}")
+for file, df in dataframes.items():
+    print(f"Dataset: {file}")
+    print(df.head())  # Display the first few rows
+    print("Missing Values:")
+    print(df.isnull().sum())  # Check for missing values
+    print("-" * 50)
+for file, df in dataframes.items():
+    print(f"Handling missing values for {file}...")
+    
+    # Drop rows with missing target values (if applicable)
+    if "RELAPSE" in df.columns:
+        df = df.dropna(subset=["RELAPSE"])
+    
+    # Fill missing values in numeric columns with the mean
+    numeric_cols = df.select_dtypes(include=["number"]).columns
+    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
+    
+    # Fill missing values in categorical columns with a placeholder
+    categorical_cols = df.select_dtypes(include=["object"]).columns
+    df[categorical_cols] = df[categorical_cols].fillna("Unknown")
+    
+    # Update the DataFrame in the dictionary
+    dataframes[file] = df
+    print(f"Missing values handled for {file}")
+for file, df in dataframes.items():
+    print(f"Encoding categorical variables for {file}...")
+    
+    # Encode categorical variables
+    categorical_cols = df.select_dtypes(include=["object"]).columns
+    df = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
+    
+    # Update the DataFrame in the dictionary
+    dataframes[file] = df
+    print(f"Categorical variables encoded for {file}")
+from sklearn.preprocessing import StandardScaler
+
+for file, df in dataframes.items():
+    print(f"Normalizing features for {file}...")
+    
+    # Separate features and target
+    if "RELAPSE" in df.columns:
+        X = df.drop(columns=["RELAPSE"])
+        y = df["RELAPSE"]
+    else:
+        X = df  # If no target column is present
+    
+    # Normalize numeric features
+    numeric_cols = X.select_dtypes(include=["number"]).columns
+    scaler = StandardScaler()
+    X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
+    
+    # Combine features and target back into a DataFrame
+    if "RELAPSE" in df.columns:
+        df = pd.concat([X, y], axis=1)
+    else:
+        df = X
+    
+    # Update the DataFrame in the dictionary
+    dataframes[file] = df
+    print(f"Features normalized for {file}")
+# Create a directory to store preprocessed datasets
+os.makedirs("preprocessed_datasets", exist_ok=True)
+
+# Save preprocessed datasets
+for file, df in dataframes.items():
+    preprocessed_file = f"preprocessed_datasets/{file}"
+    df.to_csv(preprocessed_file, index=False)
+    print(f"Saved preprocessed dataset to {preprocessed_file}")
+import os
+import pandas as pd
+
+# List all files in the datasets folder
+dataset_files = os.listdir("datasets")
+
+# Load actual dataset files (e.g., .csv, .txt) into a dictionary of DataFrames
+dataframes = {}
+for file in dataset_files:
+    if file.endswith(".csv") or file.endswith(".txt"):
+        file_path = os.path.join("datasets", file)
+        try:
+            df = pd.read_csv(file_path)
+            dataframes[file] = df
+            print(f"Loaded {file} with shape {df.shape}")
+        except Exception as e:
+            print(f"Failed to load {file}: {e}")
+for file, df in dataframes.items():
+    print(f"Dataset: {file}")
+    print(df.head())  # Display the first few rows
+    print("Missing Values:")
+    print(df.isnull().sum())  # Check for missing values
+    print("-" * 50)
+for file, df in dataframes.items():
+    print(f"Handling missing values for {file}...")
+    
+    # Drop rows with missing target values (if applicable)
+    if "RELAPSE" in df.columns:
+        df = df.dropna(subset=["RELAPSE"])
+    
+    # Fill missing values in numeric columns with the mean
+    numeric_cols = df.select_dtypes(include=["number"]).columns
+    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
+    
+    # Fill missing values in categorical columns with a placeholder
+    categorical_cols = df.select_dtypes(include=["object"]).columns
+    df[categorical_cols] = df[categorical_cols].fillna("Unknown")
+    
+    # Update the DataFrame in the dictionary
+    dataframes[file] = df
+    print(f"Missing values handled for {file}")
+for file, df in dataframes.items():
+    print(f"Encoding categorical variables for {file}...")
+    
+    # Encode categorical variables
+    categorical_cols = df.select_dtypes(include=["object"]).columns
+    df = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
+    
+    # Update the DataFrame in the dictionary
+    dataframes[file] = df
+    print(f"Categorical variables encoded for {file}")
+from sklearn.preprocessing import StandardScaler
+
+for file, df in dataframes.items():
+    print(f"Normalizing features for {file}...")
+    
+    # Separate features and target
+    if "RELAPSE" in df.columns:
+        X = df.drop(columns=["RELAPSE"])
+        y = df["RELAPSE"]
+    else:
+        X = df  # If no target column is present
+    
+    # Normalize numeric features
+    numeric_cols = X.select_dtypes(include=["number"]).columns
+    scaler = StandardScaler()
+    X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
+    
+    # Combine features and target back into a DataFrame
+    if "RELAPSE" in df.columns:
+        df = pd.concat([X, y], axis=1)
+    else:
+        df = X
+    
+    # Update the DataFrame in the dictionary
+    dataframes[file] = df
+    print(f"Features normalized for {file}")
+# Create a directory to store preprocessed datasets
+os.makedirs("preprocessed_datasets", exist_ok=True)
+
+# Save preprocessed datasets
+for file, df in dataframes.items():
+    preprocessed_file = f"preprocessed_datasets/{file}"
+    df.to_csv(preprocessed_file, index=False)
+    print(f"Saved preprocessed dataset to {preprocessed_file}")
+import pandas as pd
+import numpy as np
+
+# Create a synthetic dataset
+np.random.seed(42)
+data = {
+    "ID_REF": [f"X{i:03d}" for i in range(100)],
+    "RELAPSE": np.random.randint(0, 2, size=100),  # Binary target variable
+    "AGE": np.random.randint(20, 80, size=100),  # Numeric feature
+    "TUMOR_SIZE": np.random.uniform(1.0, 5.0, size=100),  # Numeric feature
+    "SUBTYPE": np.random.choice(["Luminal A", "Luminal B", "Basal", "HER2+"], size=100),  # Categorical feature
+    "ELSTON": np.random.randint(1, 4, size=100)  # Numeric feature
+}
+
+# Create a DataFrame
+df = pd.DataFrame(data)
+print("Synthetic Dataset:")
+print(df.head())
+# Handle missing values (for demonstration)
+df["TUMOR_SIZE"] = df["TUMOR_SIZE"].fillna(df["TUMOR_SIZE"].mean())  # Fill missing numeric values
+df["SUBTYPE"] = df["SUBTYPE"].fillna("Unknown")  # Fill missing categorical values
+print("Dataset after handling missing values:")
+print(df.head())
+# Encode categorical variables
+df = pd.get_dummies(df, columns=["SUBTYPE"], drop_first=True)
+print("Dataset after encoding categorical variables:")
+print(df.head())
+from sklearn.preprocessing import StandardScaler
+
+# Normalize numeric features
+scaler = StandardScaler()
+numeric_cols = ["AGE", "TUMOR_SIZE", "ELSTON"]
+df[numeric_cols] = scaler.fit_transform(df[numeric_cols])
+print("Dataset after normalizing features:")
+print(df.head())
+# Save preprocessed dataset
+df.to_csv("preprocessed_datasets/synthetic_dataset.csv", index=False)
+print("Preprocessed dataset saved to preprocessed_datasets/synthetic_dataset.csv")
+from sklearn.model_selection import train_test_split
+
+# Separate features and target
+X = df.drop(columns=["ID_REF", "RELAPSE"])
+y = df["RELAPSE"]
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print("Training set shape:", X_train.shape)
+print("Testing set shape:", X_test.shape)
+from sklearn.ensemble import RandomForestClassifier
+
+# Initialize the model
+model = RandomForestClassifier(random_state=42)
+
+# Train the model
+model.fit(X_train, y_train)
+
+print("Model trained successfully!")
+from sklearn.model_selection import cross_val_score
+
+# Perform 5-fold cross-validation
+cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring="accuracy")
+
+print("Cross-validation scores:", cv_scores)
+print("Mean CV accuracy:", cv_scores.mean())
+from sklearn.metrics import confusion_matrix
+
+# Predict on the test set
+y_pred = model.predict(X_test)
+
+# Generate confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print(conf_matrix)
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+
+# Predict probabilities for the test set
+y_pred_proba = model.predict_proba(X_test)[:, 1]
+
+# Compute ROC curve and AUC
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+roc_auc = auc(fpr, tpr)
+
+# Plot ROC curve
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend(loc="lower right")
+plt.show()
+import joblib
+
+# Save the model
+joblib.dump(model, "breast_cancer_model.pkl")
+print("Model saved to breast_cancer_model.pkl")
+from sklearn.model_selection import GridSearchCV
+
+# Define the parameter grid
+param_grid = {
+    'n_estimators': [50, 100, 200],  # Number of trees in the forest
+    'max_depth': [None, 10, 20],     # Maximum depth of the tree
+    'min_samples_split': [2, 5, 10]  # Minimum number of samples required to split a node
+}
+# Initialize Grid Search
+grid_search = GridSearchCV(
+    estimator=model,  # Base model
+    param_grid=param_grid,  # Parameter grid
+    cv=5,  # 5-fold cross-validation
+    scoring="accuracy",  # Evaluation metric
+    n_jobs=-1  # Use all available CPU cores
+)
+
+# Fit Grid Search to the training data
+grid_search.fit(X_train, y_train)
+
+# Print the best parameters and score
+print("Best Parameters:", grid_search.best_params_)
+print("Best CV Accuracy:", grid_search.best_score_)
+# Predict on the test set using the best model
+best_model = grid_search.best_estimator_
+y_pred_tuned = best_model.predict(X_test)
+
+# Generate confusion matrix
+conf_matrix_tuned = confusion_matrix(y_test, y_pred_tuned)
+print("Confusion Matrix (Tuned Model):")
+print(conf_matrix_tuned)
+
+# Compute accuracy
+accuracy_tuned = (conf_matrix_tuned[0, 0] + conf_matrix_tuned[1, 1]) / conf_matrix_tuned.sum()
+print("Accuracy (Tuned Model):", accuracy_tuned)
+print("Original Model Accuracy:", (conf_matrix[0, 0] + conf_matrix[1, 1]) / conf_matrix.sum())
+print("Tuned Model Accuracy:", accuracy_tuned)
+import numpy as np
+
+# Get feature importances
+importances = best_model.feature_importances_
+feature_names = X.columns
+
+# Sort feature importances in descending order
+indices = np.argsort(importances)[::-1]
+
+# Print feature importances
+print("Feature Importances:")
+for i in indices:
+    print(f"{feature_names[i]}: {importances[i]:.4f}")
+import matplotlib.pyplot as plt
+
+# Plot feature importances
+plt.figure(figsize=(10, 6))
+plt.title("Feature Importances")
+plt.bar(range(X.shape[1]), importances[indices], align="center")
+plt.xticks(range(X.shape[1]), feature_names[indices], rotation=90)
+plt.xlabel("Feature")
+plt.ylabel("Importance")
+plt.show()
+from fastapi import FastAPI
+import joblib
+import pandas as pd
+
+# Load the trained model
+model = joblib.load("breast_cancer_model.pkl")
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Define the prediction endpoint
+@app.post("/predict")
+def predict(data: dict):
+    # Convert input data to DataFrame
+    input_data = pd.DataFrame([data])
+    
+    # Make prediction
+    prediction = model.predict(input_data)[0]
+    prediction_proba = model.predict_proba(input_data)[0][1]  # Probability of relapse
+    
+    return {
+        "prediction": int(prediction),
+        "probability": float(prediction_proba)
+    }
+
