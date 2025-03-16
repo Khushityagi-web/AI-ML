@@ -1,0 +1,349 @@
+import pandas as pd
+
+# Copy and paste the data into a string
+data = """
+ID_REF        RELAPSE        SURV_RELAPSE        DEATH        DEATH_BC        SURV_DEATH        SUBTYPE        ELSTON
+X027JO        1        3.82        1        1        4.14        No Subtype        2
+X350JO        0        8.15        0        0        8.15        Luminal B        3
+X028JA        0        2.22        1        0        2.22        Luminal A        1
+X126AS        0        8.23        0        0        8.23        No Subtype        2
+X005JO        0        5.55        1        0        5.55        Luminal A        NA
+X045OL        0        8.3        0        0        8.3        Luminal B        3
+X041LA        0        4.42        1        0        4.42        Luminal A        2
+X229LA        0        8.07        0        0        8.07        No Subtype        1
+X347JA        0        6.38        0        0        6.38        Basal        3
+X122FO        0        8.13        0        0        8.13        ERBB2        3
+X054BO        1        4.08        1        1        5.51        Basal        NA
+X204FA        0        8.11        0        0        8.11        No Subtype        2
+X356AL        1        3.47        1        1        5.47        Luminal B        3
+X089HO        1        0.56        0        0        6.82        Luminal B        3
+X215HE        1        5.53        1        1        6.25        Normal Like        2
+X223LI        0        7.71        0        0        7.71        No Subtype        2
+X055SV        1        4.44        1        1        6.22        Luminal A        2
+X380MO        1        1.39        1        1        3.06        Basal        3
+X111MA        0        5.87        1        0        5.87        Basal        3
+X264LA        0        7.86        0        0        7.86        Luminal A        2
+X101GL        1        2.92        1        1        3.85        Luminal A        2
+X296NY        1        1.09        1        1        2.65        Luminal B        3
+X185NY        1        4.36        1        1        5.63        Luminal B        3
+X057FR        0        7.61        0        0        7.61        No Subtype        2
+X298LA        0        7.55        0        0        7.55        Normal Like        1
+X376FR        1        1.19        1        1        3.18        Luminal A        2
+X164MY        0        8.03        0        0        8.03        Normal Like        1
+X071AV        1        5.16        0        0        7.31        Luminal A        2
+X377DE        0        7.65        0        0        7.65        Normal Like        3
+X166JO        0        7.38        0        0        7.38        Basal        2
+X187OL        0        7.29        0        0        7.29        Basal        3
+X121LE        0        8.03        0        0        8.03        Luminal A        2
+X318KI        0        8.03        0        0        8.03        Normal Like        1
+X160LU        1        6.65        0        0        7.93        Luminal A        1
+X297PE        0        7.73        0        0        7.73        No Subtype        1
+X113SO        0        8.2        0        0        8.2        Luminal B        1
+X361NO        0        7.59        0        0        7.59        No Subtype        3
+X382GU        0        7.81        0        0        7.81        ERBB2        3
+X003WI        0        8.48        0        0        8.48        Luminal A        NA
+X309EV        0        7.95        0        0        7.95        Normal Like        1
+X031ER        0        2.24        1        0        2.24        Luminal A        2
+X214WI        0        7.28        0        0        7.28        Luminal B        3
+X310WI        0        7.96        0        0        7.96        Normal Like        2
+X319AN        0        6.86        0        0        6.86        Basal        3
+X035SI        0        7.03        0        0        7.03        No Subtype        2
+X086LI        0        8.46        0        0        8.46        Normal Like        2
+X268AR        0        7.84        0        0        7.84        Luminal A        2
+X024BJ        0        6.13        0        0        6.13        No Subtype        2
+X188AH        0        7.21        0        0        7.21        Luminal B        3
+X074KA        0        8.13        0        0        8.13        Normal Like        2
+X084GE        0        7.65        0        0        7.65        Luminal B        NA
+X219WO        0        7.07        0        0        7.07        Normal Like        2
+X125WA        1        3.99        1        1        4.72        ERBB2        2
+X333SI        0        7.55        0        0        7.55        Normal Like        1
+X026NA        0        7.75        0        0        7.75        Luminal A        1
+X172SA        0        8.08        0        0        8.08        Luminal A        2
+X373LI        1        1.55        1        1        2.38        Basal        3
+X018GU        0        8.4        0        0        8.4        Luminal A        NA
+X115LU        0        7.54        0        0        7.54        Basal        3
+X178WA        0        7.28        0        0        7.28        Normal Like        1
+X076ER        0        7.73        0        0        7.73        Luminal A        2
+X161JO        1        1.85        1        1        3        ERBB2        3
+X137TH        0        6.31        0        0        6.31        Normal Like        3
+X158KU        0        8.3        0        0        8.3        Normal Like        2
+X259AB        0        7.07        0        0        7.07        Normal Like        2
+X246TA        1        3.15        1        1        6.4        Luminal A        3
+X261EN        0        8.15        0        0        8.15        Normal Like        1
+X191SA        0        8.24        0        0        8.24        Basal        NA
+X372LU        0        6.02        0        0        6.02        Basal        3
+X242KR        0        5.85        0        0        5.85        Luminal B        3
+X112FR        1        5        0        0        5.96        Normal Like        2
+X210NI        0        5.81        0        0        5.81        Normal Like        NA
+X281BR        0        5.86        0        0        5.86        Normal Like        2
+X010BJ        0        5.75        0        0        5.75        Luminal A        NA
+X211WA        0        5.71        0        0        5.71        Luminal A        1
+X213BI        0        5.63        0        0        5.63        No Subtype        2
+X276EK        0        5.68        0        0        5.68        Luminal A        2
+X225KA        0        7.99        0        0        7.99        Normal Like        2
+X040TH        0        5.56        0        0        5.56        Luminal B        3
+X360RI        1        1.61        1        1        4.61        Luminal B        3
+X243BE        0        5.69        0        0        5.69        No Subtype        1
+X119AN        0        5.79        1        0        5.79        Luminal A        NA
+X218BE        1        1.04        1        1        1.73        Normal Like        2
+X231CA        0        8.33        0        0        8.33        Normal Like        2
+X142SW        0        6.03        0        0        6.03        Luminal A        3
+X011DA        0        4.51        1        0        4.51        Luminal A        1
+X174HE        0        5.86        0        0        5.86        Normal Like        2
+X117KO        1        4.3        0        0        5.56        Luminal B        1
+X199PO        0        7.92        0        0        7.92        Luminal A        3
+X063PE        0        6.52        0        0        6.52        Luminal A        2
+X371AS        0        7.42        0        0        7.42        Basal        3
+X240SM        0        6.46        0        0        6.46        No Subtype        NA
+X307EG        0        8.43        0        0        8.43        Normal Like        2
+X183AN        1        6.24        1        1        6.72        Basal        2
+X374BR        1        3.89        0        0        7.28        Normal Like        2
+X342BL        1        4.27        0        0        7.96        Luminal B        3
+X165AN        0        7.59        0        0        7.59        Normal Like        2
+X262SP        1        0.23        1        1        1.21        No Subtype        2
+X206RI        0        7.51        0        0        7.51        Normal Like        2
+X092NO        0        7.67        0        0        7.67        Normal Like        2
+X087BU        0        8.3        0        0        8.3        No Subtype        1
+X330IG        0        7.78        0        0        7.78        Luminal A        2
+X352AN        0        7.89        0        0        7.89        Basal        3
+X284JE        0        7.44        0        0        7.44        Normal Like        1
+X079JA        0        5.95        0        0        5.95        Luminal A        1
+X052ZA        1        2.78        1        1        2.83        Luminal B        2
+X049SA        0        6.26        0        0        6.26        Luminal A        2
+X019ER        0        8.32        0        0        8.32        Luminal A        1
+X349LE        1        3.86        1        1        4.83        ERBB2        3
+X056EN        0        6.17        1        0        6.17        Luminal A        NA
+X216AN        0        8.13        0        0        8.13        Luminal B        3
+X260LI        0        5.95        0        0        5.95        Normal Like        1
+X136ER        0        5.98        0        0        5.98        Normal Like        2
+X176TH        0        6.05        0        0        6.05        Basal        2
+X345VI        0        6.76        0        0        6.76        Normal Like        1
+X157HA        0        8.32        0        0        8.32        Normal Like        2
+X081UL        0        6.55        0        0        6.55        ERBB2        2
+X123ER        0        7.94        0        0        7.94        Normal Like        1
+X170FA        0        6.55        0        0        6.55        Basal        3
+X331HA        0        7.05        0        0        7.05        Luminal A        3
+X192LA        0        6.4        0        0        6.4        ERBB2        3
+X075DA        0        7.4        0        0        7.4        Luminal B        3
+X029AN        1        1.12        1        1        1.72        Basal        3
+X336MO        1        6.44        0        0        7.71        Basal        3
+X150JO        0        5.69        0        0        5.69        ERBB2        3
+X128SA        0        7.67        0        0        7.67        Basal        2
+X275WE        1        3.92        1        1        4.79        Luminal B        3
+X285FL        0        7.78        0        0        7.78        Luminal A        3
+X171SO        0        7.5        0        0        7.5        Luminal A        3
+X249LU        0        7.36        0        0        7.36        Luminal A        1
+X244SO        0        7.73        0        0        7.73        Basal        3
+X258VE        1        1.12        1        1        1.14        Basal        3
+X154AN        1        1.3        1        1        1.67        ERBB2        2
+X351OL        1        1.46        1        1        3.84        ERBB2        NA
+X146HO        0        8.47        0        0        8.47        No Subtype        2
+X221LU        0        8.03        0        0        8.03        ERBB2        3
+X085RY        0        7.99        0        0        7.99        Normal Like        1
+X365MA        1        0.76        1        1        2.8        Luminal B        3
+X325OS        0        7.63        0        0        7.63        ERBB2        3
+X379BA        0        7.84        0        0        7.84        Luminal A        2
+X283AN        0        7.75        0        0        7.75        No Subtype        2
+X202NI        0        7.67        0        0        7.67        No Subtype        1
+X014ER        1        1.26        1        0        2.28        Basal        3
+X059HO        0        6.61        0        0        6.61        ERBB2        3
+X341UL        0        7.19        0        0        7.19        Basal        3
+X069EK        0        6.44        0        0        6.44        Basal        3
+X095NI        1        0.9        1        1        4.41        ERBB2        3
+X138BR        0        6.32        0        0        6.32        Luminal B        3
+X196SA        0        8.36        0        0        8.36        Normal Like        2
+X282WI        0        8.49        0        0        8.49        Luminal A        2
+X132VI        0        0.18        1        0        0.18        Normal Like        3
+X048SA        0        5.94        0        0        5.94        Luminal B        3
+X288BE        0        8.32        0        0        8.32        No Subtype        3
+X036AR        1        1.34        0        0        5.98        Luminal B        3
+X304VE        1        0.67        0        0        6.02        Luminal A        3
+X015HE        1        2.79        1        1        3.07        ERBB2        3
+X327EN        1        1.38        1        1        4.87        Basal        3
+X184LO        0        5.62        0        0        5.62        Luminal A        1
+X072TE        0        0.7        1        0        0.7        No Subtype        2
+"""
+
+# Load the data into a pandas DataFrame
+from io import StringIO
+df = pd.read_csv(StringIO(data), sep="\s+")  # \s+ handles multiple spaces
+
+# Display the first few rows of the DataFrame
+print(df.head())
+
+# Check the column names
+print("Column Names:", df.columns)
+
+# Check the data types of each column
+print("Data Types:\n", df.dtypes)
+
+# Check for missing values
+print("Missing Values:\n", df.isnull().sum())
+# Drop rows with missing target values (RELAPSE)
+df = df.dropna(subset=["RELAPSE"])
+
+# Drop rows with missing target values (RELAPSE)
+df = df.dropna(subset=["RELAPSE"])
+
+# Fill missing values in ELSTON with the mean
+df["ELSTON"] = df["ELSTON"].fillna(df["ELSTON"].mean())
+
+# Fill missing values in SUBTYPE with a placeholder (e.g., "Unknown")
+df["SUBTYPE"] = df["SUBTYPE"].fillna("Unknown")
+
+# Check for missing values again
+print("Missing Values After Cleaning:\n", df.isnull().sum())
+# Combine the two columns for SUBTYPE
+df["SUBTYPE"] = df["SUBTYPE"].astype(str) + " " + df["ELSTON"].astype(str)
+
+# Drop the extra column (if it exists)
+if "ELSTON" in df.columns:
+    df = df.drop(columns=["ELSTON"])
+
+# Display the cleaned data
+print(df.head())
+# Encode categorical variables (SUBTYPE)
+df = pd.get_dummies(df, columns=["SUBTYPE"], drop_first=True)
+
+# Display the preprocessed data
+print(df.head())
+# Select relevant features and target
+features = df.drop(columns=["ID_REF", "RELAPSE", "SURV_RELAPSE", "DEATH", "DEATH_BC", "SURV_DEATH"])
+target = df["RELAPSE"]
+
+# Display the preprocessed data
+print("Features:\n", features.head())
+print("Target:\n", target.head())
+from sklearn.model_selection import train_test_split
+
+# Check unique values in the RELAPSE column
+print("Unique Values in RELAPSE:", df["RELAPSE"].unique())
+
+# Convert RELAPSE to binary (0 or 1)
+df["RELAPSE"] = df["RELAPSE"].astype(int)
+
+# Verify the conversion
+print("Unique Values in RELAPSE after conversion:", df["RELAPSE"].unique())
+# Select relevant features and target
+features = df.drop(columns=["ID_REF", "RELAPSE", "SURV_RELAPSE", "DEATH", "DEATH_BC", "SURV_DEATH"])
+target = df["RELAPSE"]
+
+# Display the preprocessed data
+print("Features:\n", features.head())
+print("Target:\n", target.head())
+from sklearn.model_selection import train_test_split
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+
+# Normalize the data (optional, but recommended for some models)
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+# Check unique values in the RELAPSE column
+print("Unique Values in RELAPSE:", df["RELAPSE"].unique())
+# Binarize RELAPSE based on a threshold (e.g., 5)
+threshold = 5
+df["RELAPSE"] = (df["RELAPSE"] > threshold).astype(int)
+
+# Check unique values after binarization
+print("Unique Values in RELAPSE after binarization:", df["RELAPSE"].unique())
+# Select relevant features and target
+features = df.drop(columns=["ID_REF", "RELAPSE", "SURV_RELAPSE", "DEATH", "DEATH_BC", "SURV_DEATH"])
+target = df["RELAPSE"]
+
+# Display the preprocessed data
+print("Features:\n", features.head())
+print("Target:\n", target.head())
+from sklearn.model_selection import train_test_split
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+
+# Normalize the data (optional, but recommended for some models)
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix, roc_curve, auc
+import matplotlib.pyplot as plt
+
+# Initialize the model
+model = RandomForestClassifier(random_state=42)
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Predict on the test set
+y_pred = model.predict(X_test)
+y_pred_proba = model.predict_proba(X_test)[:, 1]
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:\n", conf_matrix)
+
+# ROC Curve
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+roc_auc = auc(fpr, tpr)
+
+# Plot ROC Curve
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend(loc="lower right")
+plt.show()
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+# Calculate metrics
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+
+# Print metrics
+print("Accuracy:", accuracy)
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1-Score:", f1)
+from sklearn.model_selection import GridSearchCV
+
+# Define the parameter grid
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [None, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+# Perform Grid Search
+grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, scoring="accuracy")
+grid_search.fit(X_train, y_train)
+
+# Print the best parameters and score
+print("Best Parameters:", grid_search.best_params_)
+print("Best CV Accuracy:", grid_search.best_score_)
+import numpy as np
+
+# Get feature importances
+importances = model.feature_importances_
+feature_names = features.columns
+
+# Sort feature importances
+indices = np.argsort(importances)[::-1]
+
+# Plot feature importances
+plt.figure()
+plt.title("Feature Importances")
+plt.bar(range(features.shape[1]), importances[indices], align="center")
+plt.xticks(range(features.shape[1]), feature_names[indices], rotation=90)
+plt.xlabel("Feature")
+plt.ylabel("Importance")
+plt.show()
+
+
