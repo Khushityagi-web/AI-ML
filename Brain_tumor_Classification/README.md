@@ -1,133 +1,143 @@
-# Brain Tumor Classification (CNN · Practice Project)
+# Brain Tumor Classification (CNN Practice Project)
 
-This project is a practice implementation of an end-to-end deep learning workflow for classifying brain tumor MRI images using Convolutional Neural Networks (CNNs).  
-It was created during my early deep learning learning phase to understand the basics of image preprocessing, CNN model building, training, and evaluation.
+This project is a practice implementation of an end-to-end deep learning workflow for classifying brain tumor MRI images using Convolutional Neural Networks (CNNs).
+
+It was created during my early deep learning phase to understand the basics of image preprocessing, CNN model building, training, and evaluation.
 
 The dataset used is from Kaggle:  
 **Brain Tumor Classification (MRI)** by Sartaj Bhuvaji.
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 This practice project includes:
 
 - Dataset download using Kaggle CLI  
-- Zip extraction and dataset inspection  
-- Image loading & visualization  
-- Image preprocessing  
-  - resizing  
-  - normalization  
+- ZIP extraction and dataset inspection  
+- Image loading and visualization  
+- Image preprocessing:
+  - Resizing  
+  - Normalization  
 - Train/test split  
-- Handling class imbalance checks  
+- Class imbalance checks  
 - Multiple CNN model iterations:
-  - Baseline CNN
-  - CNN + Dropout (to reduce overfitting)
-  - CNN + Data Augmentation
-  - CNN + Adjusted Dropout & lighter augmentation  
+  - Baseline CNN  
+  - CNN with Dropout (to reduce overfitting)  
+  - CNN with Data Augmentation  
+  - CNN with adjusted Dropout and lighter augmentation  
 - Model training and validation  
 - Evaluation using accuracy, confusion matrix, and classification report  
-- Saving trained models (`.h5` format)
+- Saving trained models (`.h5` format)  
 
-The goal was to understand *how CNNs behave in image classification tasks* rather than build a production model.
-
----
-
-## 📁 File Structure
-
-Brain_tumor_Classification/
-│
-├── script
+The goal of this project is to understand how CNNs behave in image classification tasks rather than to build a production-ready model.
 
 ---
 
-## 🧠 Dataset Classes
+## File Structure
+
+    Brain_tumor_Classification/
+    │── script.py
+    │── README.md
+
+---
+
+## Dataset Classes
 
 The MRI dataset contains four categories:
 
-- **glioma_tumor**  
-- **meningioma_tumor**  
-- **pituitary_tumor**  
-- **no_tumor**
+- `glioma_tumor`  
+- `meningioma_tumor`  
+- `pituitary_tumor`  
+- `no_tumor`  
 
-Images appear in both:
-Training/
-Testing/
+Images are organized into:
+
+- `Training/`  
+- `Testing/`  
 
 ---
 
-## 🖼️ Preprocessing Steps
+## Preprocessing Steps
 
 - Loaded images using OpenCV  
 - Resized all images to **128 × 128**  
-- Normalized pixel values (0–1)  
+- Normalized pixel values to the range **0–1**  
 - Label-encoded class names  
-- Split into training and testing sets (80/20)  
-- Saved processed data into `preprocessed_data.pkl`
+- Split data into training and testing sets (80/20)  
+- Saved processed data to `preprocessed_data.pkl`  
 
 ---
 
-## 🤖 CNN Model Development
+## CNN Model Development
 
-Multiple CNN architectures were tested:
+Multiple CNN architectures were tested.
 
-### **1️⃣ Baseline CNN**
-- Conv2D → MaxPool layers  
-- Dense layer → Softmax output  
-- 10 epochs training  
+### 1. Baseline CNN
+- Convolutional (`Conv2D`) and max-pooling layers  
+- Dense layer with softmax output  
+- Trained for 10 epochs  
 
-### **2️⃣ CNN with Dropout**
-Added dropout after convolution and dense layers to reduce overfitting.
+---
 
-### **3️⃣ CNN + Data Augmentation**
+### 2. CNN with Dropout
+- Added dropout after convolutional and dense layers  
+- Reduced overfitting  
+
+---
+
+### 3. CNN with Data Augmentation
 Applied:
-- rotations  
-- shifts  
-- shear  
-- zoom  
-- flips  
+- Rotations  
+- Shifts  
+- Shear  
+- Zoom  
+- Flips  
 
-Trained for more epochs for better generalization.
-
-### **4️⃣ CNN with Adjusted Dropout**
-Reduced dropout levels and used lighter augmentation for stable training.
-
-Each version was trained, evaluated, and saved separately.
-
-Models saved as:
-
-brain_tumor_cnn_model.h5
-brain_tumor_cnn_improved_model.h5
-brain_tumor_cnn_adjusted_model.h5
-
+Trained for additional epochs to improve generalization.
 
 ---
 
-## 📈 Evaluation Metrics
+### 4. CNN with Adjusted Dropout
+- Reduced dropout levels  
+- Used lighter augmentation for more stable training  
+
+Each model version was trained, evaluated, and saved separately.
+
+### Saved Models
+
+- `brain_tumor_cnn_model.h5`  
+- `brain_tumor_cnn_improved_model.h5`  
+- `brain_tumor_cnn_adjusted_model.h5`  
+
+---
+
+## Evaluation Metrics
 
 After training each model, evaluation was performed using:
 
-### ✔ Test accuracy  
-Printed after model evaluation.
+### Test Accuracy
+- Printed after model evaluation  
 
-### ✔ Confusion matrix  
-Plotted using seaborn to visualize misclassification patterns.
+### Confusion Matrix
+- Plotted using seaborn to visualize misclassification patterns  
 
-### ✔ Classification report  
+### Classification Report
 Includes:
-- precision  
-- recall  
-- f1-score  
+- Precision  
+- Recall  
+- F1-score  
+
 for all four tumor classes.
 
-### ✔ Prediction decoding  
-Converted predicted indices back to original tumor labels.
+### Prediction Decoding
+- Converted predicted class indices back to original tumor labels  
 
 ---
 
-## 🛠️ Requirements
+## Requirements
 
-Install required packages:
+Install the required packages:
 
-```bash
-pip install kaggle opencv-python numpy tensorflow matplotlib seaborn scikit-learn
+    pip install kaggle opencv-python numpy tensorflow matplotlib seaborn scikit-learn
+
